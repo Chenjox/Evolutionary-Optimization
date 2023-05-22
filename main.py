@@ -1,5 +1,8 @@
 
 import numpy as np
+import scipy as sci
+from scipy.stats import truncnorm
+import random
 
 # Globale Variablen
 # Dimension der Zielfunktion
@@ -8,8 +11,7 @@ dimension = 3
 # Zielfunktion, 
 # xVec: ein N-Dimensionaler Vector der Eingangsgrößen
 def zf(xVec): 
-
-    return 0.0
+    return sin(xVec[0]) + 7.0 * sin(xVec[1])**2 + 0.1 * xVec[2]**4 * sin(xVec[0])
 
 # Nebenbedingungen
 # XVec: ein N-Dimensionaler Vector der Eingangsgrößen
@@ -17,13 +19,28 @@ def zf(xVec):
 def checkNB(xVec):
     return True
 
+# https://stackoverflow.com/a/44308018
+def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
+    return truncnorm(
+        (low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
+
 # Generiert normalverteilte Punkte im Suchraum
 # minAbstand Double
 # maxAbstand Double
+# anzahl: Anzahl Kindpunkte
 # dimension Integer
 # return n x dimension Numpy Array
-def randomPointsInBox(minAbstand, maxAbstand, dimension):
-    return np.zeros(2,dimension)
+def randomPointsInBox(minAbstand, maxAbstand, anzahl):
+    result = np.zeros((anzahl,dimension))
+    for i in range(0,anzahl):
+        normalDist = get_truncated_normal((minAbstand + maxAbstand)/2, 1, minAbstand, maxAbstand)
+        w = normalDist.rvs(dimension)
+        for j in range(0,dimension):
+            vorzeichen = random.randint(1,2)
+            w[j] = (-1)**(vorzeichen) * w[j]
+        #print(w)
+        result[i] = w
+    return result
 
 # Modifiziert die Suchbox
 # minAbstand Double
@@ -43,4 +60,6 @@ def optimize(startPoint, minMax):
 
 ## Hauptprogramm
 
-zfOpt = optimize()
+#zfOpt = optimize()
+
+print(randomPointsInBox(1.0,10.0,10))
