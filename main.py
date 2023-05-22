@@ -91,7 +91,7 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
                 fitness[i] = zf(momentanePunkte[i])
             else:
                 fitness[i] = zfMax(momentanePunkte[i])
-        # https://stackoverflow.com/a/19932054
+        # https://stackoverflow.com/a/19932054 FIXME do not sort if all are equal
         fitness, punkte = map(list, zip(*sorted(zip(fitness, momentanePunkte), reverse=True)))
     
         # War der Jahrgang gut?
@@ -102,13 +102,16 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
         print(bestOf, bestOf/anzahlPunkte)
         # Erfolgsregel
         if bestOf/anzahlPunkte >= 0.2:
+            if abs(fitness[0] - vergleichswert) < 1e-10:
+                momentanePunkte = punkte
+                break
             elternpunkt = punkte[0]
             vergleichswert = fitness[0]
             #Mutation
             #print(elternpunkt)
             suchpunkte = randomPointsInBox(minSB,maxSB,anzahlStartPunkte)
             momentanePunkte = elternpunkt + suchpunkte
-            
+
             print(momentanePunkte)
         else:
             minSB, maxSB = modifySuchbox(minSB, maxSB, verkleinerungsfaktor)
@@ -118,7 +121,7 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
         itere = itere + 1
         
 
-    return 0.0
+    return momentanePunkte[0]
 
 ## Erster Suchbereich ist abhängig von dem Eingangsraum.
 
@@ -127,6 +130,6 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
 
 #zfOpt = optimize()
 
-optimize(True,5,-math.pi,math.pi, 0.1,0.8 ,0.3)
-
+p = optimize(True,5,-math.pi,math.pi, 0.1,0.8 ,0.3)
+print(p)
 # print(p)
