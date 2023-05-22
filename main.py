@@ -20,13 +20,19 @@ def zfMax(xVec):
 # Nebenbedingungen
 # XVec: ein N-Dimensionaler Vector der Eingangsgrößen
 # return: Boolean: Wahr wenn keine Verletzt, falsch otherwise
-def checkNB(xVec):
-    isinrangeNB = True
-    for i in range(xVec.size()):
-        if xVec[i] < -math.pi or xVec[i] > math.pi:
-            isinrangeNB = False
 
-    return isinrangeNB
+def forceBoundaries(punkte,minBereich,maxBereich):
+    for i in range(len(punkte)):
+        for j in range(len(punkte[0])):
+            if punkte[i,j] < minBereich:
+                punkte[i,j] = minBereich
+            if punkte[i,j] > maxBereich:
+                punkte[i,j] = maxBereich
+
+    return  punkte
+
+
+
 
 # https://stackoverflow.com/a/44308018
 def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
@@ -115,6 +121,8 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
             suchpunkte = randomPointsInBox(minSB,maxSB,anzahlStartPunkte)
             momentanePunkte = elternpunkt + suchpunkte
             print("Ich verkleinere mich!")
+
+        momentanePunkte = forceBoundaries(momentanePunkte,minBereich,maxBereich)
         itere = itere + 1
         
 
