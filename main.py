@@ -1,4 +1,4 @@
-
+import math
 import numpy as np
 import scipy as sci
 from scipy.stats import truncnorm
@@ -17,7 +17,12 @@ def zf(xVec):
 # XVec: ein N-Dimensionaler Vector der Eingangsgrößen
 # return: Boolean: Wahr wenn keine Verletzt, falsch otherwise
 def checkNB(xVec):
-    return True
+    isinrangeNB = True
+    for i in range(xVec.size()):
+        if xVec[i] < -math.pi or xVec[i] > math.pi:
+            isinrangeNB = False
+
+    return isinrangeNB
 
 # https://stackoverflow.com/a/44308018
 def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
