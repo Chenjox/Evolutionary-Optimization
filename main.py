@@ -107,9 +107,12 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
                 fitness[i] = zf(momentanePunkte[i])
             else:
                 fitness[i] = zfMax(momentanePunkte[i])
-        # https://stackoverflow.com/a/19932054 FIXME do not sort if all are equal
-        fitness, punkte = map(list, zip(*sorted(zip(fitness, momentanePunkte), reverse=True)))
-    
+        # Fix with help of ChatGPT....
+        sortIndices = np.argsort(fitness)
+        fitness = fitness[sortIndices]
+        punkte = momentanePunkte[sortIndices]
+        # fitness, punkte = map(list, zip(*sorted(zip(fitness, momentanePunkte), reverse=True)))
+
         # War der Jahrgang gut?
         bestOf = 0
         for i in range(0,anzahlPunkte):
@@ -136,8 +139,8 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
             print("Ich verkleinere mich!")
 
 
-            #Speichern der relevanten Daten zur Visualiserung
-            dataToVisualize(punkte[0], maxSuchbereich, maxSuchbereich)
+        #Speichern der relevanten Daten zur Visualiserung
+        dataToVisualize(punkte[0], maxSB, maxSB)
 
         momentanePunkte = forceBoundaries(momentanePunkte,minBereich,maxBereich)
         itere = itere + 1
@@ -151,9 +154,8 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
 
 #zfOpt = optimize()
 
-p = optimize(True,5,-math.pi,math.pi, 0.1,0.8 ,0.3)
+p = optimize(True,20,-math.pi,math.pi, 1,2 ,0.4)
 print(p)
-
 
 
 #Visualisierung
@@ -167,5 +169,5 @@ for i in range(1, n):
     x = rectangelXYZ[i, 0]
     y = rectangelXYZ[i, 1]
     w = rectangleWidth[i]
-    ax.add_patch(matplotlib.patches.Rectangle((x, y), w, w, fill=None, alpha=1))
+    ax.add_patch(matplotlib.patches.Rectangle((x-w/2, y-w/2), w, w, fill=None, alpha=1))
 plt.show()
