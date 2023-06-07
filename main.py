@@ -11,11 +11,8 @@ from matplotlib import pyplot as plt
 # Dimension der Zielfunktion
 dimension = 3
 # Arrays zur Visualiserung:
-rectangelXYZ = np.zeros([1,3])
-rectangelHeight = np.zeros(1)
-rectangleWidth = np.zeros(1)
 samplePoints = np.zeros([1,3])
-fittestPoints = np.zeros([1,3])
+bestChain = np.zeros([1,3])
 # Zielfunktion, 
 # xVec: ein N-Dimensionaler Vector der Eingangsgrößen
 def zf(xVec): 
@@ -83,19 +80,11 @@ def getStartpunkte(mittelpunkt,maxAbstand,anzahlPunkte):
         p[i] = mittelpunkt + p[i]
     return p
 
-
-def dataToVisualize(XYZ, Height, Width):
-    # Arrays zur Visualiserung:
-    global rectangleWidth, rectangelXYZ, fittestPoints
-    fittestPoints = np.vstack((fittestPoints, XYZ))
-    rectangelXYZ = np.vstack((rectangelXYZ, XYZ))
-    rectangleWidth = np.append(rectangleWidth, Width)
-
 # startPoint: N-Dimensionaler Vector
 # minMax: Boolean ob minimum oder Maximum gesucht ist
 
 def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereich,minSuchbereich,maxSuchbereich,verkleinerungsfaktor):
-
+    global bestChain
     bestPoint = np.zeros(3)
     bestFitness = -math.inf
     for k in range(0,anzahlKetten):
@@ -103,6 +92,7 @@ def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereic
         maxSB = maxSuchbereich
         momentanePunkte = getStartpunkte((minBereich+maxBereich)/2, (maxBereich-minBereich)/2, anzahlStartPunkte)
         vergleichswert = -math.inf
+        chain = np.zeros([1,3])
         maxIter = 1000
         itere = 0
         while itere < maxIter:
@@ -147,12 +137,13 @@ def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereic
 
 
             #Speichern der relevanten Daten zur Visualiserung
-            dataToVisualize(punkte[0], maxSB, maxSB)
+            chain = np.vstack((chain,punkte[0]))
 
             momentanePunkte = forceBoundaries(momentanePunkte,minBereich,maxBereich)
             itere = itere + 1
         if vergleichswert > bestFitness:
             bestPoint = momentanePunkte[0]
+            bestChain = chain
             bestFitness = vergleichswert
     print(bestFitness)
     return bestPoint
@@ -163,37 +154,34 @@ def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereic
 
 #zfOpt = optimize()
 
-p = optimize(True,10,10,-math.pi,math.pi, 1,2 ,0.4)
+p = optimize(True,15,20,-math.pi,math.pi, 1,3 ,0.6)
 print(p)
 
 #Visualisierung
 fig = plt.figure()
 #122
-bs = fig.add_subplot(111, projection='3d')
+bs = fig.add_subplot(122, projection='3d')
 
 x = samplePoints[:,0]
 y = samplePoints[:,1]
 z = samplePoints[:,2]
 
-fx = fittestPoints[:,0]
-fy = fittestPoints[:,1]
-fz = fittestPoints[:,2]
-
-
 bs.scatter(x,y,z)
 bs.set_xlim3d(-math.pi, math.pi)  # Set x-axis range
 bs.set_ylim3d(-math.pi, math.pi)  # Set y-axis range
 bs.set_zlim3d(-math.pi, math.pi)
-#bs.plot(fx,fy,fz,c='red')
 
-#ax = fig.add_subplot(121, aspect='equal')
-#ax.set_xlim([-math.pi, math.pi])
-#ax.set_ylim([-math.pi, math.pi])
-#
-#n = np.size(rectangleWidth)
-#for i in range(1, n):
-#    x = rectangelXYZ[i, 0]
-#    y = rectangelXYZ[i, 1]
-#    w = rectangleWidth[i]
-#    ax.add_patch(matplotlib.patches.Rectangle((x-w/2, y-w/2), w, w, fill=None, alpha=1))
+print(len(samplePoints))
+# Beste Linie an Punkten
+ax = fig.add_subplot(121, projection='3d')
+
+fx = bestChain[:,0]
+fy = bestChain[:,1]
+fz = bestChain[:,2]
+ax.plot(fx,fy,fz,c='red')
+
+ax.set_xlim3d(-math.pi, math.pi)  # Set x-axis range
+ax.set_ylim3d(-math.pi, math.pi)  # Set y-axis range
+ax.set_zlim3d(-math.pi, math.pi)
+
 plt.show()
