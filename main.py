@@ -14,10 +14,13 @@ dimension = 3
 rectangelXYZ = np.zeros([1,3])
 rectangelHeight = np.zeros(1)
 rectangleWidth = np.zeros(1)
-
+samplePoints = np.zeros([1,3])
+fittestPoints = np.zeros([1,3])
 # Zielfunktion, 
 # xVec: ein N-Dimensionaler Vector der Eingangsgrößen
 def zf(xVec): 
+    global samplePoints
+    samplePoints = np.vstack((samplePoints,xVec))
     return sin(xVec[0]) + 7.0 * sin(xVec[1])**2 + 0.1 * xVec[2]**4 * sin(xVec[0])
 
 def zfMax(xVec):
@@ -83,70 +86,76 @@ def getStartpunkte(mittelpunkt,maxAbstand,anzahlPunkte):
 
 def dataToVisualize(XYZ, Height, Width):
     # Arrays zur Visualiserung:
-    global rectangleWidth, rectangelXYZ
+    global rectangleWidth, rectangelXYZ, fittestPoints
+    fittestPoints = np.vstack((fittestPoints, XYZ))
     rectangelXYZ = np.vstack((rectangelXYZ, XYZ))
     rectangleWidth = np.append(rectangleWidth, Width)
 
 # startPoint: N-Dimensionaler Vector
 # minMax: Boolean ob minimum oder Maximum gesucht ist
 
-def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbereich,maxSuchbereich,verkleinerungsfaktor):
+def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereich,minSuchbereich,maxSuchbereich,verkleinerungsfaktor):
 
-    minSB = minSuchbereich
-    maxSB = maxSuchbereich
-    momentanePunkte = getStartpunkte((minBereich+maxBereich)/2, (maxBereich-minBereich)/2, anzahlStartPunkte)
-    vergleichswert = -math.inf
-    maxIter = 1000
-    itere = 0
-    while itere < maxIter:
-        #Selektion
-        anzahlPunkte = momentanePunkte.shape[0]
-        fitness = np.zeros((anzahlPunkte,1))
-        for i in range(0,anzahlPunkte):
-            if isMaximumsuche:
-                fitness[i] = zf(momentanePunkte[i])
+    bestPoint = np.zeros(3)
+    bestFitness = -math.inf
+    for k in range(0,anzahlKetten):
+        minSB = minSuchbereich
+        maxSB = maxSuchbereich
+        momentanePunkte = getStartpunkte((minBereich+maxBereich)/2, (maxBereich-minBereich)/2, anzahlStartPunkte)
+        vergleichswert = -math.inf
+        maxIter = 1000
+        itere = 0
+        while itere < maxIter:
+            #Selektion
+            anzahlPunkte = momentanePunkte.shape[0]
+            fitness = np.zeros((anzahlPunkte,1))
+            for i in range(0,anzahlPunkte):
+                if isMaximumsuche:
+                    fitness[i] = zf(momentanePunkte[i])
+                else:
+                    fitness[i] = zfMax(momentanePunkte[i])
+            # Fix with help of ChatGPT....
+            sortIndices = np.argsort(fitness)
+            fitness = fitness[sortIndices]
+            punkte = momentanePunkte[sortIndices]
+            # fitness, punkte = map(list, zip(*sorted(zip(fitness, momentanePunkte), reverse=True)))
+
+            # War der Jahrgang gut?
+            bestOf = 0
+            for i in range(0,anzahlPunkte):
+                if fitness[i] > vergleichswert:
+                    bestOf = bestOf + 1
+            #print(bestOf, bestOf/anzahlPunkte)
+            # Erfolgsregel
+            if bestOf/anzahlPunkte >= 0.2:
+                if abs(fitness[0] - vergleichswert) < 1e-10:
+                    momentanePunkte = punkte
+                    break
+                elternpunkt = punkte[0]
+                vergleichswert = fitness[0]
+                #Mutation
+                #print(elternpunkt)
+                suchpunkte = randomPointsInBox(minSB,maxSB,anzahlStartPunkte)
+                momentanePunkte = elternpunkt + suchpunkte
+
+                #print(momentanePunkte)
             else:
-                fitness[i] = zfMax(momentanePunkte[i])
-        # Fix with help of ChatGPT....
-        sortIndices = np.argsort(fitness)
-        fitness = fitness[sortIndices]
-        punkte = momentanePunkte[sortIndices]
-        # fitness, punkte = map(list, zip(*sorted(zip(fitness, momentanePunkte), reverse=True)))
-
-        # War der Jahrgang gut?
-        bestOf = 0
-        for i in range(0,anzahlPunkte):
-            if fitness[i] > vergleichswert:
-                bestOf = bestOf + 1
-        print(bestOf, bestOf/anzahlPunkte)
-        # Erfolgsregel
-        if bestOf/anzahlPunkte >= 0.2:
-            if abs(fitness[0] - vergleichswert) < 1e-10:
-                momentanePunkte = punkte
-                break
-            elternpunkt = punkte[0]
-            vergleichswert = fitness[0]
-            #Mutation
-            #print(elternpunkt)
-            suchpunkte = randomPointsInBox(minSB,maxSB,anzahlStartPunkte)
-            momentanePunkte = elternpunkt + suchpunkte
-
-            print(momentanePunkte)
-        else:
-            minSB, maxSB = modifySuchbox(minSB, maxSB, verkleinerungsfaktor)
-            suchpunkte = randomPointsInBox(minSB,maxSB,anzahlStartPunkte)
-            momentanePunkte = elternpunkt + suchpunkte
-            print("Ich verkleinere mich!")
+                minSB, maxSB = modifySuchbox(minSB, maxSB, verkleinerungsfaktor)
+                suchpunkte = randomPointsInBox(minSB,maxSB,anzahlStartPunkte)
+                momentanePunkte = elternpunkt + suchpunkte
+                #print("Ich verkleinere mich!")
 
 
-        #Speichern der relevanten Daten zur Visualiserung
-        dataToVisualize(punkte[0], maxSB, maxSB)
+            #Speichern der relevanten Daten zur Visualiserung
+            dataToVisualize(punkte[0], maxSB, maxSB)
 
-        momentanePunkte = forceBoundaries(momentanePunkte,minBereich,maxBereich)
-        itere = itere + 1
-        
-
-    return momentanePunkte[0]
+            momentanePunkte = forceBoundaries(momentanePunkte,minBereich,maxBereich)
+            itere = itere + 1
+        if vergleichswert > bestFitness:
+            bestPoint = momentanePunkte[0]
+            bestFitness = vergleichswert
+    print(bestFitness)
+    return bestPoint
 
 ## Erster Suchbereich ist abhängig von dem Eingangsraum.
 
@@ -154,20 +163,37 @@ def optimize(isMaximumsuche,anzahlStartPunkte, minBereich,maxBereich,minSuchbere
 
 #zfOpt = optimize()
 
-p = optimize(True,20,-math.pi,math.pi, 1,2 ,0.4)
+p = optimize(True,10,10,-math.pi,math.pi, 1,2 ,0.4)
 print(p)
-
 
 #Visualisierung
 fig = plt.figure()
-ax = fig.add_subplot(111, aspect='equal')
-plt.xlim([-1, 3])
-plt.ylim([-1, 3])
-n = 10
-#(np.size(rectangleWidth))
-for i in range(1, n):
-    x = rectangelXYZ[i, 0]
-    y = rectangelXYZ[i, 1]
-    w = rectangleWidth[i]
-    ax.add_patch(matplotlib.patches.Rectangle((x-w/2, y-w/2), w, w, fill=None, alpha=1))
+#122
+bs = fig.add_subplot(111, projection='3d')
+
+x = samplePoints[:,0]
+y = samplePoints[:,1]
+z = samplePoints[:,2]
+
+fx = fittestPoints[:,0]
+fy = fittestPoints[:,1]
+fz = fittestPoints[:,2]
+
+
+bs.scatter(x,y,z)
+bs.set_xlim3d(-math.pi, math.pi)  # Set x-axis range
+bs.set_ylim3d(-math.pi, math.pi)  # Set y-axis range
+bs.set_zlim3d(-math.pi, math.pi)
+#bs.plot(fx,fy,fz,c='red')
+
+#ax = fig.add_subplot(121, aspect='equal')
+#ax.set_xlim([-math.pi, math.pi])
+#ax.set_ylim([-math.pi, math.pi])
+#
+#n = np.size(rectangleWidth)
+#for i in range(1, n):
+#    x = rectangelXYZ[i, 0]
+#    y = rectangelXYZ[i, 1]
+#    w = rectangleWidth[i]
+#    ax.add_patch(matplotlib.patches.Rectangle((x-w/2, y-w/2), w, w, fill=None, alpha=1))
 plt.show()
