@@ -61,7 +61,7 @@ def randomPointsInBox(minAbstand, maxAbstand, anzahl):
         # Zufällige Projection in eine Richtung
         richtung = random.randint(0,dimension-1)
         vorzeichen = random.randint(1,2)
-        punkt[richtung] = (-1)**(vorzeichen)* punkt[richtung]
+        punkt[richtung] = (-1)**(vorzeichen)
         normalDist = get_truncated_normal((minAbstand + maxAbstand)/2, 1, minAbstand, maxAbstand)
         w = normalDist.rvs(1)
 
