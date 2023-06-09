@@ -160,7 +160,7 @@ def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereic
 
 #zfOpt = optimize()
 
-p = optimize(True,20,30,-math.pi,math.pi, 1,3 ,0.6)
+p = optimize(True,25,20,-math.pi,math.pi, 1,3 ,0.55)
 print(p)
 
 #Visualisierung
