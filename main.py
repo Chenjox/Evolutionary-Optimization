@@ -54,13 +54,19 @@ def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
 def randomPointsInBox(minAbstand, maxAbstand, anzahl):
     result = np.zeros((anzahl,dimension))
     for i in range(0,anzahl):
-        normalDist = get_truncated_normal((minAbstand + maxAbstand)/2, 1, minAbstand, maxAbstand)
-        w = normalDist.rvs(dimension)
+        # Zufälliger Punkt im Einheitswürfel
+        punkt = np.zeros((dimension))
         for j in range(0,dimension):
-            vorzeichen = random.randint(1,2)
-            w[j] = (-1)**(vorzeichen) * w[j]
+            punkt[j] = random.uniform(-1.0,1.0)
+        # Zufällige Projection in eine Richtung
+        richtung = random.randint(0,dimension-1)
+        vorzeichen = random.randint(1,2)
+        punkt[richtung] = (-1)**(vorzeichen)* punkt[richtung]
+        normalDist = get_truncated_normal((minAbstand + maxAbstand)/2, 1, minAbstand, maxAbstand)
+        w = normalDist.rvs(1)
+
         #print(w)
-        result[i] = w
+        result[i] = w*punkt
     return result
 
 # Modifiziert die Suchbox
@@ -154,7 +160,7 @@ def optimize(isMaximumsuche,anzahlStartPunkte, anzahlKetten,minBereich,maxBereic
 
 #zfOpt = optimize()
 
-p = optimize(True,20,40,-math.pi,math.pi, 1,3 ,0.6)
+p = optimize(True,200,1,-math.pi,math.pi, 1,3 ,0.6)
 print(p)
 
 #Visualisierung
